@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+:root {
+  --green:      #00ff9d;
+  --green-dim:  #00c97a;
+  --red:        #ff4444;
+  --amber:      #ffaa00;
+  --bg:         #000000;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--green);
+  font-family: var(--font-mono), 'Courier New', monospace;
+}
+
+/* CRT glow efekti */
+.crt {
+  text-shadow: 0 0 8px #00ff9d88, 0 0 2px #00ff9d;
+}
+
+/* Yazı yazılıyor animasyonu */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.cursor::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: var(--green);
+}
+
+/* Glitch efekti */
+@keyframes glitch {
+  0%   { transform: translate(0); }
+  20%  { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
+  40%  { transform: translate(3px, -1px); }
+  60%  { transform: translate(-1px, 2px); filter: hue-rotate(-90deg); }
+  80%  { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+.glitch {
+  animation: glitch 0.3s ease infinite;
+}
+
+/* Scan line overlay */
+.scanlines::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Progress bar */
+@keyframes progress {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.4s ease forwards; }
+
+/* Terminal satır */
+.terminal-line {
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+

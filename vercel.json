@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_NETWORK": "mainnet",
+    "NEXT_PUBLIC_VAULT_KEY": "0xAc9F3e3D0F2bb1AACb625C67c6eDFeBf397b4463",
+    "NEXT_PUBLIC_MASTER_KEY": "0x647A6CF58ABaFBF04b14d7E83dDaAC476D8386eF",
+    "NEXT_PUBLIC_VAULT_LEGEND": "0x1D92f579d02C6f0354541DFa8Caed9f86d220D46"
+  }
+}
