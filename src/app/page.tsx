@@ -21,7 +21,7 @@ type Stage =
   | 'claim'
   | 'board'
 
-type Lang = 'EN' | 'DE' | 'AR' | 'ZH' | 'JA'
+type Lang  = 'EN' | 'DE' | 'AR' | 'ZH' | 'JA'
 
 // ── Çeviriler ─────────────────────────────────────────────────────────────────
 const T = {
@@ -127,8 +127,9 @@ const LANGS: { key: Lang; flag: string; label: string }[] = [
 
 // ── Ana bileşen ───────────────────────────────────────────────────────────────
 export default function Home() {
-  const [stage, setStage] = useState<Stage>('landing')
-  const [lang,  setLang]  = useState<Lang>('EN')
+  const [stage,       setStage]       = useState<Stage>('landing')
+  const [lang,        setLang]        = useState<Lang>('EN')
+  const [videoActive, setVideoActive] = useState(false)
   const { isConnected } = useAccount()
 
   const t     = T[lang]
@@ -171,23 +172,45 @@ export default function Home() {
             </div>
           </div>
 
-          {/* YouTube — otomatik başlar (sessiz) */}
+          {/* YouTube — tıkla & oynat (mobil + masaüstü uyumlu) */}
           <div className="w-full max-w-2xl mb-8">
             <div
-              className="relative w-full border border-green-900"
+              className="relative w-full border border-green-900 bg-black cursor-pointer"
               style={{ paddingBottom: '56.25%' }}
+              onClick={() => setVideoActive(true)}
             >
-              <iframe
-                src="https://www.youtube.com/embed/IKQOKbFQp_4?si=mesZO6i1desgg6P-&autoplay=1&mute=1&rel=0"
-                className="absolute inset-0 w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-                title="Base Vault"
-              />
-            </div>
-            <div className="text-center text-xs text-green-900 mt-1">
-              🔇 Sesi açmak için video üzerine tıklayın / Click to unmute
+              {videoActive ? (
+                <iframe
+                  src="https://www.youtube.com/embed/IKQOKbFQp_4?autoplay=1&rel=0&playsinline=1"
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  title="Base Vault"
+                />
+              ) : (
+                <>
+                  {/* Thumbnail */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="https://img.youtube.com/vi/IKQOKbFQp_4/maxresdefault.jpg"
+                    alt="Base Vault Video"
+                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                  />
+                  {/* Play butonu */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-green-400/20 border-2 border-green-400 flex items-center justify-center hover:bg-green-400/40 transition-all">
+                      <svg className="w-7 h-7 text-green-400 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* CRT efekti */}
+                  <div className="absolute bottom-3 left-0 right-0 text-center text-xs text-green-500 tracking-widest opacity-70">
+                    ▶ OYNAT / PLAY
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -279,7 +302,7 @@ export default function Home() {
 
       {/* ── TIER 1: Terminal Bulmacalar ──────────────────────────────────── */}
       {stage === 'tier1' && (
-        <Terminal onComplete={() => setStage('tier2gate')} />
+        <Terminal onComplete={() => setStage('tier2gate')} onBack={() => setStage('landing')} />
       )}
 
       {/* ── TIER 2 GATE: Mint VaultKey ───────────────────────────────────── */}

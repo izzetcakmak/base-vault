@@ -29,7 +29,7 @@ const PUZZLES = selectPuzzles()
 type Line = { text: string; color?: 'green' | 'red' | 'white' | 'amber' }
 
 // ─── Ana bileşen ──────────────────────────────────────────────────────────────
-export default function Terminal({ onComplete }: { onComplete: () => void }) {
+export default function Terminal({ onComplete, onBack }: { onComplete: () => void; onBack?: () => void }) {
   const { address } = useAccount()
 
   const [lines,      setLines]      = useState<Line[]>([])
@@ -304,7 +304,17 @@ export default function Terminal({ onComplete }: { onComplete: () => void }) {
 
         {/* Header */}
         <div className="flex justify-between items-center mb-4 border border-green-800 p-3">
-          <span className="crt text-xs tracking-widest">BASE VAULT // TIER 1</span>
+          <div className="flex items-center gap-3">
+            <span className="crt text-xs tracking-widest">BASE VAULT // TIER 1</span>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="text-xs text-green-800 hover:text-green-500 border border-green-900 hover:border-green-700 px-2 py-0.5 transition-colors"
+              >
+                ← Ana Sayfa
+              </button>
+            )}
+          </div>
           <ConnectButton showBalance={false} chainStatus="none" accountStatus="address" />
         </div>
 
