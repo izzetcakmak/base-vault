@@ -237,6 +237,29 @@ export default function Terminal({ onComplete }: { onComplete: () => void }) {
     )
   }
 
+  // ── Cüzdan bağlı değilse engelle ─────────────────────────────────────────
+  if (!address) {
+    return (
+      <div className="scanlines min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md border border-amber-800 bg-black/90 p-8 text-center font-mono">
+          <div className="text-amber-400 text-4xl mb-4">🔒</div>
+          <div className="text-amber-400 text-xl tracking-widest mb-2 crt">
+            CÜZDAN GEREKLİ
+          </div>
+          <div className="text-gray-400 text-sm mb-6 leading-relaxed">
+            Oyunu oynamak için önce cüzdanını bağlamalısın.
+          </div>
+          <div className="flex justify-center mb-4">
+            <ConnectButton />
+          </div>
+          <div className="text-xs text-gray-700">
+            Vault Legend NFT kazanmak için cüzdan zorunludur.
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // ── Ban ekranı ────────────────────────────────────────────────────────────
   if (banExpiry) {
     return (
