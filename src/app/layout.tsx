@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     description: 'A cryptic on-chain puzzle game on Base.',
     images:      ['/og.png'],
   },
+  other: {
+    'base:app_id': '6a0a5cae3b8fba876d20b052',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
