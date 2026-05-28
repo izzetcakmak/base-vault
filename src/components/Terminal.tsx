@@ -238,16 +238,16 @@ export default function Terminal({ onComplete, onBack }: { onComplete: () => voi
       setWrongCount(newWrong)
 
       if (newWrong >= 3) {
-        // 3. yanlış → 24 saat ban
+        // 3. yanlış → 5 dakika ban
         setLines(prev => [...prev,
           { text: `> YANLIŞ. (${newWrong}/3)`, color: 'red' },
           { text: '' },
           { text: '> ⛔ MAKSIMUM DENEME AŞILDI', color: 'red' },
-          { text: '> BU CÜZDAN 24 SAAT BOYUNCA KİLİTLENDİ', color: 'red' },
+          { text: '> BU CÜZDAN 5 DAKİKA BOYUNCA KİLİTLENDİ', color: 'red' },
           { text: '> YARIN TEKRAR DENEYİN.', color: 'red' },
         ])
         if (address) {
-          const expiry = Date.now() + 24 * 60 * 60 * 1000
+          const expiry = Date.now() + 5 * 60 * 1000
           localStorage.setItem(`vault_ban_${address.toLowerCase()}`, String(expiry))
           setBanExpiry(expiry)
         }
@@ -311,7 +311,7 @@ export default function Terminal({ onComplete, onBack }: { onComplete: () => voi
           <div className="text-red-300 text-sm mb-6 leading-relaxed">
             3 yanlış cevap verdiniz.<br />
             Bu cüzdan{' '}
-            <span className="text-amber-400 font-bold">24 saat</span>{' '}
+            <span className="text-amber-400 font-bold">5 dakika</span>{' '}
             boyunca kilitlendi.
           </div>
 
