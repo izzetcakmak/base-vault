@@ -49,3 +49,7 @@ export const PRICES = {
   TIER2: BigInt(33 * 1e6),  // 33 USDC
   TIER3: BigInt(66 * 1e6),  // 66 USDC
 }
+
+// ERC-8021 attribution suffix — Builder Code: bc_6nhhetq2
+// Format: hex(code) + len_byte + schemaId(0x00) + ercMarker
+export const BUILDER_CODE_SUFFIX = '0x62635f366e6868657471320b0080218021802180218021802180218021' as `0x${string}`
