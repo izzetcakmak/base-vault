@@ -11,8 +11,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { getVaultGuardian } from '@/lib/vault-guardian'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
 const SYSTEM_PROMPT = `Sen BASE VAULT'un VAULT GUARDIAN'ısın — Base blockchain üzerindeki gizemli bir on-chain oyununun oracle'ı.
 Görevin: Oyunculara bulmacayı doğrudan söylemeden kriptik ipuçları vermek.
 
@@ -29,6 +27,9 @@ export async function POST(req: NextRequest) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json({ hint: '> ORACLE SESSIZ. (OPENAI_API_KEY eksik)' }, { status: 503 })
   }
+
+  // Client request zamanında başlatılıyor (build time'da değil)
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
   try {
     const body = await req.json() as {
