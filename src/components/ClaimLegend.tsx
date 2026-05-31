@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { BUILDER_CODE_SUFFIX } from '@/lib/wagmi'
 
 // İmza mesajı (API route ile aynı format)
 function buildClaimMessage(wallet: string, timestamp: number): string {
@@ -205,6 +206,7 @@ export default function ClaimLegend({ onBack }: { onBack?: () => void }) {
       address: VAULT_LEGEND_ADDR,
       abi: VAULT_LEGEND_ABI,
       functionName: 'mint',
+      dataSuffix: BUILDER_CODE_SUFFIX,
     })
   }
 

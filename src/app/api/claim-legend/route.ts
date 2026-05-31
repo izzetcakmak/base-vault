@@ -130,12 +130,15 @@ export async function POST(req: NextRequest) {
       transport: http('https://mainnet.base.org'),
     })
 
+    const BUILDER_CODE_SUFFIX = '0x62635f366e6868657471320b0080218021802180218021802180218021' as `0x${string}`
+
     const txHash = await walletClient.writeContract({
       address:      VAULT_LEGEND_ADDR,
       abi:          VAULT_LEGEND_ABI,
       functionName: 'addToAllowlist',
       args:         [[wallet as `0x${string}`]],
       gas:          BigInt(80_000),
+      dataSuffix:   BUILDER_CODE_SUFFIX,
     })
 
     // Rate limit kaydı

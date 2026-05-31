@@ -39,6 +39,9 @@ export default function Terminal({ onComplete, onBack }: { onComplete: () => voi
   const [showHint,   setShowHint]   = useState(false)
   const [phase,      setPhase]      = useState<'typing' | 'waiting' | 'done'>('typing')
 
+  const [aiLoading,  setAiLoading]  = useState(false)
+  const [aiUsed,     setAiUsed]     = useState(false)
+
   // ── Ban durumu ────────────────────────────────────────────────────────────
   const [banExpiry,  setBanExpiry]  = useState<number | null>(null)
   const [banChecked, setBanChecked] = useState(false)
@@ -136,12 +139,48 @@ export default function Terminal({ onComplete, onBack }: { onComplete: () => voi
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [banChecked]) // Sadece ban check tamamlanınca çalış
 
+  // ── Vault Guardian AI ipucu ───────────────────────────────────────────────
+  const askVaultAI = useCallback(async () => {
+    if (aiLoading || aiUsed) return
+    setAiLoading(true)
+
+    const p = PUZZLES[puzzleIdx]
+    try {
+      const res = await fetch('/api/hint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: p.category,
+          lines:    p.lines,
+          prompt:   p.prompt,
+          wrongCount,
+          lastAttempt: input.trim() || undefined,
+        }),
+      })
+      const data = await res.json() as { hint: string; guardianActive?: boolean }
+      setLines(prev => [
+        ...prev,
+        { text: '' },
+        { text: `> ── VAULT GUARDIAN${data.guardianActive ? ' [ONCHAIN]' : ''} ──`, color: 'amber' },
+        { text: data.hint, color: 'amber' },
+        { text: '> ──────────────────────────────', color: 'amber' },
+      ])
+      setAiUsed(true)
+    } catch {
+      setLines(prev => [...prev, { text: '> ORACLE ERİŞİLEMİYOR.', color: 'red' }])
+    } finally {
+      setAiLoading(false)
+      inputRef.current?.focus()
+    }
+  }, [aiLoading, aiUsed, puzzleIdx, wrongCount, input])
+
   // ── Puzzle yükle ─────────────────────────────────────────────────────────
   const loadPuzzle = useCallback((idx: number) => {
     setPhase('typing')
     setInput('')
     setWrongCount(0)
     setShowHint(false)
+    setAiUsed(false)
 
     addLines([{ text: '' }], 200)
     setTimeout(() => {
@@ -199,16 +238,16 @@ export default function Terminal({ onComplete, onBack }: { onComplete: () => voi
       setWrongCount(newWrong)
 
       if (newWrong >= 3) {
-        // 3. yanlış → 24 saat ban
+        // 3. yanlış → 5 dakika ban
         setLines(prev => [...prev,
           { text: `> YANLIŞ. (${newWrong}/3)`, color: 'red' },
           { text: '' },
           { text: '> ⛔ MAKSIMUM DENEME AŞILDI', color: 'red' },
-          { text: '> BU CÜZDAN 24 SAAT BOYUNCA KİLİTLENDİ', color: 'red' },
+          { text: '> BU CÜZDAN 5 DAKİKA BOYUNCA KİLİTLENDİ', color: 'red' },
           { text: '> YARIN TEKRAR DENEYİN.', color: 'red' },
         ])
         if (address) {
-          const expiry = Date.now() + 24 * 60 * 60 * 1000
+          const expiry = Date.now() + 5 * 60 * 1000
           localStorage.setItem(`vault_ban_${address.toLowerCase()}`, String(expiry))
           setBanExpiry(expiry)
         }
@@ -272,7 +311,7 @@ export default function Terminal({ onComplete, onBack }: { onComplete: () => voi
           <div className="text-red-300 text-sm mb-6 leading-relaxed">
             3 yanlış cevap verdiniz.<br />
             Bu cüzdan{' '}
-            <span className="text-amber-400 font-bold">24 saat</span>{' '}
+            <span className="text-amber-400 font-bold">5 dakika</span>{' '}
             boyunca kilitlendi.
           </div>
 
@@ -338,10 +377,23 @@ export default function Terminal({ onComplete, onBack }: { onComplete: () => voi
             </div>
           ))}
 
-          {/* İpucu (2. yanlıştan sonra gösterilir) */}
+          {/* Statik ipucu (2. yanlıştan sonra) */}
           {showHint && phase === 'waiting' && (
             <div className="text-amber-400 mt-1">
               {`> İPUCU: ${puzzle.hint}`}
+            </div>
+          )}
+
+          {/* Vault Guardian AI ipucu butonu (1. yanlıştan sonra) */}
+          {wrongCount >= 1 && phase === 'waiting' && !aiUsed && (
+            <div className="mt-2">
+              <button
+                onClick={askVaultAI}
+                disabled={aiLoading}
+                className="text-cyan-500 hover:text-cyan-300 border border-cyan-900 hover:border-cyan-700 px-3 py-0.5 text-xs tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-mono"
+              >
+                {aiLoading ? '[ ORACLE DÜŞÜNÜYOR... ]' : '[ VAULT GUARDIAN\'A SOR ]'}
+              </button>
             </div>
           )}
 

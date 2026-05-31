@@ -2,6 +2,9 @@
   "name": "base-vault",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,9 +12,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@coinbase/agentkit": "^0.10.4",
+    "@coinbase/onchainkit": "^1.1.2",
     "@rainbow-me/rainbowkit": "^2.2.11",
     "@tanstack/react-query": "^5.100.10",
     "next": "16.2.6",
+    "openai": "^6.39.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "viem": "^2.49.0",

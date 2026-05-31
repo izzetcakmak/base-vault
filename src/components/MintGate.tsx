@@ -9,7 +9,7 @@ import {
   usePublicClient,
 } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { CONTRACTS, PRICES } from '@/lib/wagmi'
+import { CONTRACTS, PRICES, BUILDER_CODE_SUFFIX } from '@/lib/wagmi'
 import { parseAbi, formatUnits } from 'viem'
 
 // ─── ABI'ler ─────────────────────────────────────────────────────────────────
@@ -125,6 +125,7 @@ export default function MintGate({ tier, onMinted }: { tier: Tier; onMinted: () 
         abi: ERC20_ABI,
         functionName: 'approve',
         args: [contractAddress, price],
+        dataSuffix: BUILDER_CODE_SUFFIX,
       })
       setApproveTxHash(hash)
     } catch (e: any) {
@@ -141,6 +142,7 @@ export default function MintGate({ tier, onMinted }: { tier: Tier; onMinted: () 
         address: contractAddress,
         abi,
         functionName: 'mint',
+        dataSuffix: BUILDER_CODE_SUFFIX,
       })
       setMintTxHash(hash)
     } catch (e: any) {
