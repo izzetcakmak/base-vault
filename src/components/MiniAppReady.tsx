@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 
 export function MiniAppReady() {
   useEffect(() => {
-    import('@farcaster/frame-sdk')
+    import('@farcaster/miniapp-sdk')
       .then(({ sdk }) => {
         sdk.actions.ready().catch(() => {})
       })
