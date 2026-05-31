@@ -24,14 +24,14 @@ export const metadata: Metadata = {
     'talentapp:project_verification': '69afd0c6770e5d70c9b79b2a240e5820a289c9e0b370d96ddf7bd1f2b0d677ed5f0be1bda871dcd82cacd047a18db2b3c2f8f69ae51a52a87dcaf07e8db06add',
     'fc:frame': JSON.stringify({
       version: 'next',
-      imageUrl: 'https://basevault.xyz/og.png',
+      imageUrl: 'https://www.vaultgame.online/og.png',
       button: {
         title: 'Enter the Vault →',
         action: {
           type: 'launch_frame',
           name: 'Base Vault',
-          url: 'https://basevault.xyz',
-          splashImageUrl: 'https://basevault.xyz/splash.png',
+          url: 'https://www.vaultgame.online',
+          splashImageUrl: 'https://www.vaultgame.online/splash.png',
           splashBackgroundColor: '#000000',
         },
       },
