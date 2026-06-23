@@ -4,11 +4,11 @@
  * Vault Guardian AI — Base AI Agents (AgentKit) ile güçlendirilmiş ipucu sistemi.
  *
  * AgentKit: Vault Guardian'a Base blockchain üzerinde onchain kimlik verir.
- * OpenAI:   Bulmacaya özel kriptik ipuçları üretir.
+ * Claude:   Bulmacaya özel kriptik ipuçları üretir.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
 import { getVaultGuardian } from '@/lib/vault-guardian'
 
 const SYSTEM_PROMPT = `Sen BASE VAULT'un VAULT GUARDIAN'ısın — Base blockchain üzerindeki gizemli bir on-chain oyununun oracle'ı.
@@ -24,12 +24,12 @@ Kurallar:
 - Base blockchain ve kripto dünyasına referans vermeyi sev`
 
 export async function POST(req: NextRequest) {
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json({ hint: '> ORACLE SESSIZ. (OPENAI_API_KEY eksik)' }, { status: 503 })
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json({ hint: '> ORACLE SESSIZ. (ANTHROPIC_API_KEY eksik)' }, { status: 503 })
   }
 
   // Client request zamanında başlatılıyor (build time'da değil)
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   try {
     const body = await req.json() as {
@@ -57,10 +57,12 @@ export async function POST(req: NextRequest) {
       wrongCount === 2 ? 'biraz daha yardımcı' :
       'oldukça yardımcı ama cevabı söyleme'
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const completion = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 150,
+      temperature: 0.85,
+      system: SYSTEM_PROMPT + guardianCtx,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT + guardianCtx },
         {
           role: 'user',
           content: `Kategori: ${category}
@@ -73,11 +75,12 @@ Son yanlış cevap: ${lastAttempt ?? 'yok'}
 İpucunu ver.`,
         },
       ],
-      max_tokens: 120,
-      temperature: 0.85,
     })
 
-    const hint = completion.choices[0]?.message?.content?.trim() ?? '> VAULT SESSIZ KALIYOR.'
+    const hint = completion.content[0]?.type === 'text'
+      ? completion.content[0].text.trim()
+      : '> VAULT SESSIZ KALIYOR.'
+
     return NextResponse.json({ hint, guardianActive: !!guardian })
 
   } catch (err) {
