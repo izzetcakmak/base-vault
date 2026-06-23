@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { BUILDER_CODE_SUFFIX } from '@/lib/wagmi'
+import { BUILDER_CODE_SUFFIX, CONTRACTS } from '@/lib/wagmi'
 
 // İmza mesajı (API route ile aynı format)
 function buildClaimMessage(wallet: string, timestamp: number): string {
@@ -60,10 +60,8 @@ const VAULT_LEGEND_ABI = [
   },
 ] as const
 
-// ─── Contract address ─────────────────────────────────────────────────────────
-const VAULT_LEGEND_ADDR = (
-  process.env.NEXT_PUBLIC_VAULT_LEGEND ?? '0x0000000000000000000000000000000000000000'
-) as `0x${string}`
+// ─── Contract address (ortak sabit — checksum normalize edilmiş) ───────────────
+const VAULT_LEGEND_ADDR = CONTRACTS.VAULT_LEGEND
 
 // ─── Phase metadata ───────────────────────────────────────────────────────────
 const PHASE_INFO = {

@@ -17,13 +17,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient, createWalletClient, http, verifyMessage } from 'viem'
+import { createPublicClient, createWalletClient, http, verifyMessage, getAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
 
-// ── Kontrat adresleri ─────────────────────────────────────────────
-const VAULT_LEGEND_ADDR = (process.env.NEXT_PUBLIC_VAULT_LEGEND ?? '') as `0x${string}`
-const MASTER_KEY_ADDR   = (process.env.NEXT_PUBLIC_MASTER_KEY   ?? '') as `0x${string}`
+// ── Kontrat adresleri (env yoksa mainnet sabitleri, checksum normalize) ────────
+const VAULT_LEGEND_ADDR = getAddress(
+  (process.env.NEXT_PUBLIC_VAULT_LEGEND || '0x01CC8dfb1B4eD8518fcb5e9A9049B846fdB5F0e8').toLowerCase(),
+)
+const MASTER_KEY_ADDR = getAddress(
+  (process.env.NEXT_PUBLIC_MASTER_KEY || '0x647A6CF58ABaFBF04b14d7E83dDaAC476D8386eF').toLowerCase(),
+)
 
 // ── ABI ───────────────────────────────────────────────────────────
 const MASTER_KEY_ABI = [
