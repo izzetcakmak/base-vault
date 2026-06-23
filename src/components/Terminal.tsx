@@ -6,7 +6,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { selectPuzzles, getContent, isCorrect, type Puzzle, type Lang } from '@/data/puzzles'
 
 // 3 wrong answers → wallet locked for this long
-const BAN_MS = 24 * 60 * 60 * 1000
+const BAN_MS = 1 * 60 * 1000
 
 // ─── Localized UI strings ─────────────────────────────────────────────────────
 type UI = {
@@ -57,7 +57,7 @@ const UISTR: Record<Lang, UI> = {
     oracleErr: '> ORACLE UNREACHABLE.',
     wrong: n => `> WRONG. (${n}/3)`,
     maxTitle: '> ⛔ MAXIMUM ATTEMPTS EXCEEDED',
-    maxLine1: '> THIS WALLET IS LOCKED FOR 24 HOURS',
+    maxLine1: '> THIS WALLET IS LOCKED FOR 1 MINUTE',
     maxLine2: '> TRY AGAIN LATER.',
     tierComplete: ['> VAULT TIER 1 COMPLETE','> YOU HAVE PROVEN YOUR WORTH, AGENT','> THE VAULT AWAITS... UNLOCKING...'],
     unlocking: 'UNLOCKING NEXT TIER...',
@@ -95,7 +95,7 @@ const UISTR: Record<Lang, UI> = {
     oracleErr: '> ORAKEL NICHT ERREICHBAR.',
     wrong: n => `> FALSCH. (${n}/3)`,
     maxTitle: '> ⛔ MAXIMALE VERSUCHE ÜBERSCHRITTEN',
-    maxLine1: '> DIESE WALLET IST 24 STUNDEN GESPERRT',
+    maxLine1: '> DIESE WALLET IST 1 MINUTE GESPERRT',
     maxLine2: '> VERSUCHE ES SPÄTER ERNEUT.',
     tierComplete: ['> VAULT STUFE 1 ABGESCHLOSSEN','> DU HAST DICH BEWÄHRT, AGENT','> DER TRESOR WARTET... ENTSPERRE...'],
     unlocking: 'NÄCHSTE STUFE WIRD ENTSPERRT...',
@@ -133,7 +133,7 @@ const UISTR: Record<Lang, UI> = {
     oracleErr: '> تعذّر الوصول إلى العرّاف.',
     wrong: n => `> خطأ. (${n}/3)`,
     maxTitle: '> ⛔ تم تجاوز الحد الأقصى للمحاولات',
-    maxLine1: '> هذه المحفظة مقفلة لمدة 24 ساعة',
+    maxLine1: '> هذه المحفظة مقفلة لمدة دقيقة واحدة',
     maxLine2: '> حاول مرة أخرى لاحقاً.',
     tierComplete: ['> اكتمل المستوى 1','> لقد أثبتّ جدارتك أيها العميل','> الخزنة في انتظارك... جارٍ الفتح...'],
     unlocking: 'جارٍ فتح المستوى التالي...',
@@ -171,7 +171,7 @@ const UISTR: Record<Lang, UI> = {
     oracleErr: '> 无法连接神谕。',
     wrong: n => `> 错误。(${n}/3)`,
     maxTitle: '> ⛔ 已超过最大尝试次数',
-    maxLine1: '> 此钱包已被锁定24小时',
+    maxLine1: '> 此钱包已被锁定1分钟',
     maxLine2: '> 请稍后再试。',
     tierComplete: ['> 第1关完成','> 你已证明了实力，特工','> 保险库在等待... 正在解锁...'],
     unlocking: '正在解锁下一关...',
@@ -209,7 +209,7 @@ const UISTR: Record<Lang, UI> = {
     oracleErr: '> オラクルに接続できません。',
     wrong: n => `> 不正解。(${n}/3)`,
     maxTitle: '> ⛔ 最大試行回数を超過',
-    maxLine1: '> このウォレットは24時間ロックされました',
+    maxLine1: '> このウォレットは1分間ロックされました',
     maxLine2: '> あとでもう一度お試しください。',
     tierComplete: ['> ティア1完了','> 実力を証明したな、エージェント','> 金庫が待っている... 解錠中...'],
     unlocking: '次のティアを解錠中...',
