@@ -42,6 +42,7 @@ const T = {
     connect_note: 'A wallet is required to play and track your progress.',
     claim_link:   'Claim Legend NFT',
     board_link:   'Leaderboard',
+    video_note:   '🔇 Click the video to unmute',
   },
   DE: {
     subtitle:     'ON-CHAIN RÄTSELSPIEL // BASE CHAIN',
@@ -60,6 +61,7 @@ const T = {
     connect_note: 'Eine Wallet wird benötigt, um zu spielen und den Fortschritt zu verfolgen.',
     claim_link:   'Legend NFT beanspruchen',
     board_link:   'Bestenliste',
+    video_note:   '🔇 Klicke auf das Video für Ton',
   },
   AR: {
     subtitle:     'لعبة غموض على السلسلة // BASE CHAIN',
@@ -78,6 +80,7 @@ const T = {
     connect_note: 'المحفظة مطلوبة للعب وتتبع تقدمك.',
     claim_link:   'استلام Legend NFT',
     board_link:   'لوحة المتصدرين',
+    video_note:   '🔇 اضغط على الفيديو لتشغيل الصوت',
   },
   ZH: {
     subtitle:     '链上解谜游戏 // BASE CHAIN',
@@ -96,6 +99,7 @@ const T = {
     connect_note: '需要钱包才能游戏并追踪进度。',
     claim_link:   '领取 Legend NFT',
     board_link:   '排行榜',
+    video_note:   '🔇 点击视频取消静音',
   },
   JA: {
     subtitle:     'オンチェーン謎解きゲーム // BASE CHAIN',
@@ -114,6 +118,7 @@ const T = {
     connect_note: 'プレイと進捗の追跡にはウォレットが必要です。',
     claim_link:   'Legend NFT を請求',
     board_link:   'リーダーボード',
+    video_note:   '🔇 動画をクリックして音を出す',
   },
 } as const
 
@@ -187,7 +192,7 @@ export default function Home() {
               />
             </div>
             <div className="text-center text-xs text-green-900 mt-1">
-              🔇 Sesi açmak için video üzerine tıklayın
+              {t.video_note}
             </div>
           </div>
 
@@ -279,7 +284,7 @@ export default function Home() {
 
       {/* ── TIER 1: Terminal Bulmacalar ──────────────────────────────────── */}
       {stage === 'tier1' && (
-        <Terminal onComplete={() => setStage('tier2gate')} onBack={() => setStage('landing')} />
+        <Terminal lang={lang} onComplete={() => setStage('tier2gate')} onBack={() => setStage('landing')} />
       )}
 
       {/* ── TIER 2 GATE: Mint VaultKey ───────────────────────────────────── */}
