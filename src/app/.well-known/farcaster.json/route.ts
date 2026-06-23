@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const url = process.env.NEXT_PUBLIC_URL ?? 'https://basevault.xyz'
+  const url = process.env.NEXT_PUBLIC_URL ?? 'https://vaultgame.online'
 
   const manifest = {
     accountAssociation: {
