@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Share_Tech_Mono } from 'next/font/google'
 import { Providers } from './providers'
 import { MiniAppReady } from '@/components/MiniAppReady'
+import VaultAgent from '@/components/VaultAgent'
 import './globals.css'
 import '@rainbow-me/rainbowkit/styles.css'
 
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full bg-black text-green-400 flex flex-col">
         <Providers>{children}</Providers>
         <MiniAppReady />
+        <VaultAgent />
       </body>
     </html>
   )

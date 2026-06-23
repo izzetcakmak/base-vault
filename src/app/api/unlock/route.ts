@@ -1,0 +1,93 @@
+/**
+ * /api/unlock — x402 payment-gated premium hint endpoint
+ *
+ * Players pay 0.01 USDC (via x402 protocol — EIP-3009 on Base) to unlock
+ * a premium, near-solution hint for the current Vault tier.
+ * No payment header → HTTP 402 with payment requirements.
+ *
+ * This complements the free AI Guardian hints at /api/hint:
+ *   /api/hint   → free cryptic AI hints (AgentKit + OpenAI)
+ *   /api/unlock → paid premium hints (x402 micropayment)
+ */
+import { NextRequest, NextResponse } from 'next/server'
+import { verify, useFacilitator } from 'x402/verify'
+
+const TREASURY  = '0xD4F1254C803662c46D9c21f80F4F3c15FF57e2c9'
+const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+const PRICE     = '10000' // 0.01 USDC (6 decimals)
+const RESOURCE  = 'https://vaultgame.online/api/unlock'
+
+const paymentRequirements = {
+  scheme:            'exact' as const,
+  network:           'base'  as const,
+  maxAmountRequired: PRICE,
+  resource:          RESOURCE,
+  description:       'Unlock a premium Vault hint for 0.01 USDC',
+  mimeType:          'application/json',
+  payTo:             TREASURY,
+  maxTimeoutSeconds: 300,
+  asset:             USDC_BASE,
+  extra: {
+    name:    'USD Coin',
+    version: '2',
+  },
+}
+
+// Premium hints per tier — sent only after on-chain payment is verified
+const PREMIUM_HINTS: Record<string, string> = {
+  '1': '> PREMIUM: İlk şifre insanlığın bildiği EN ESKİ şifrelemeyi kullanır. Romalı generalleri düşün — harfleri 13 pozisyon KAYDIR.',
+  '2': '> PREMIUM: İkili sistem makinelerin dilidir. Her 0 ve 1 anlamlıdır. 8\'erli GRUPLA ve bilgisayarın ne dediğini dinle.',
+  '3': '> PREMIUM: Hash tek yönlü bir yoldur ama cevap hep kısaydı. Vault SHA-256 kullanır — hash\'i 0000 ile başlayan, küçük harfli 5 harfli kelime hangisi?',
+}
+
+export async function GET(req: NextRequest) {
+  const tier          = req.nextUrl.searchParams.get('tier') || '1'
+  const paymentHeader = req.headers.get('X-PAYMENT')
+
+  // ── No payment → return 402 with x402 requirements ───────────────────────
+  if (!paymentHeader) {
+    return NextResponse.json(
+      {
+        x402Version: 1,
+        accepts:     [paymentRequirements],
+        error:       'Payment required to unlock premium hint',
+      },
+      {
+        status:  402,
+        headers: {
+          'X-PAYMENT-REQUIREMENTS':        JSON.stringify([paymentRequirements]),
+          'Access-Control-Expose-Headers': 'X-PAYMENT-REQUIREMENTS',
+        },
+      },
+    )
+  }
+
+  // ── Verify payment via Coinbase x402 facilitator ──────────────────────────
+  try {
+    const facilitator = useFacilitator({ url: 'https://x402.org/facilitator' })
+    const result      = await verify(
+      { x402Version: 1, payload: paymentHeader } as never,
+      paymentRequirements as never,
+    )
+
+    if (!result.isValid) {
+      return NextResponse.json(
+        { error: 'Invalid payment', details: result.invalidReason },
+        { status: 402 },
+      )
+    }
+
+    const hint = PREMIUM_HINTS[tier] || PREMIUM_HINTS['1']
+
+    // Settle payment on-chain (fire and forget)
+    void facilitator.settle(
+      { x402Version: 1, payload: paymentHeader } as never,
+      paymentRequirements as never,
+    )
+
+    return NextResponse.json({ tier, hint, paid: true, payer: result.payer })
+  } catch (err) {
+    console.error('[x402 unlock]', err)
+    return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 })
+  }
+}
