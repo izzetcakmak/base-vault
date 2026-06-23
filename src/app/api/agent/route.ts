@@ -4,17 +4,13 @@
  * An on-chain aware AI agent that knows the game state and can
  * read Base blockchain data. Uses AgentKit for wallet/chain context
  * and Claude for natural language responses.
+ *
+ * NOTE: @coinbase/agentkit is imported lazily (dynamic import) inside a
+ * try/catch so that a module-load failure in serverless runtimes
+ * (e.g. bigint native bindings) never crashes the chat — Claude still works.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic                     from '@anthropic-ai/sdk'
-import { AgentKit, ViemWalletProvider, walletActionProvider, erc20ActionProvider } from '@coinbase/agentkit'
-import { createWalletClient, http }  from 'viem'
-import { base }                      from 'viem/chains'
-import { privateKeyToAccount }       from 'viem/accounts'
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-})
 
 const SYSTEM_PROMPT = `You are the Vault Agent — an AI guardian of the Base Vault mystery game.
 
@@ -46,31 +42,53 @@ WHAT YOU NEVER DO:
 
 Keep responses under 150 words. Be mysterious and encouraging.`
 
-let agentKitInstance: AgentKit | null = null
+// AgentKit is optional on-chain context. Lazily loaded so failures degrade gracefully.
+let agentKitCache: unknown = null
 
-async function getAgentKit(): Promise<AgentKit> {
-  if (agentKitInstance) return agentKitInstance
+async function getChainContext(): Promise<string> {
+  try {
+    if (!agentKitCache) {
+      const pk = process.env.OWNER_PRIVATE_KEY as `0x${string}` | undefined
+      if (!pk) return '\n[AgentKit: read-only mode — no wallet configured]'
 
-  const pk = process.env.OWNER_PRIVATE_KEY as `0x${string}`
-  if (!pk) throw new Error('OWNER_PRIVATE_KEY not set')
+      // Dynamic imports — never evaluated at module load time
+      const [
+        { AgentKit, ViemWalletProvider, walletActionProvider, erc20ActionProvider },
+        { createWalletClient, http },
+        { base },
+        { privateKeyToAccount },
+      ] = await Promise.all([
+        import('@coinbase/agentkit'),
+        import('viem'),
+        import('viem/chains'),
+        import('viem/accounts'),
+      ])
 
-  const account      = privateKeyToAccount(pk)
-  const walletClient = createWalletClient({ account, chain: base, transport: http() })
+      const account      = privateKeyToAccount(pk)
+      const walletClient = createWalletClient({ account, chain: base, transport: http() })
+      const walletProvider = new ViemWalletProvider(walletClient as never)
 
-  const walletProvider = new ViemWalletProvider(walletClient as any)
+      agentKitCache = await AgentKit.from({
+        walletProvider,
+        actionProviders: [walletActionProvider(), erc20ActionProvider()],
+      })
+    }
 
-  agentKitInstance = await AgentKit.from({
-    walletProvider,
-    actionProviders: [
-      walletActionProvider(),
-      erc20ActionProvider(),
-    ],
-  })
-
-  return agentKitInstance
+    const kit     = agentKitCache as { getActions: () => unknown[] }
+    const actions = kit.getActions()
+    return `\n[AgentKit: ${actions.length} on-chain actions available on Base]`
+  } catch (e) {
+    console.error('[agent] AgentKit unavailable:', e)
+    return '\n[AgentKit: read-only mode]'
+  }
 }
 
 export async function POST(req: NextRequest) {
+  // Anthropic is required for the chat itself
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json({ reply: '> AGENT OFFLINE. (ANTHROPIC_API_KEY missing)' }, { status: 503 })
+  }
+
   try {
     const { message } = await req.json()
     if (!message || typeof message !== 'string') {
@@ -80,25 +98,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Message too long' }, { status: 400 })
     }
 
-    // Initialize AgentKit for on-chain context
-    let chainContext = ''
-    try {
-      const kit     = await getAgentKit()
-      const actions = kit.getActions()
-      chainContext  = `\n[AgentKit: ${actions.length} on-chain actions available on Base]`
-    } catch {
-      chainContext = '\n[AgentKit: running in read-only mode]'
-    }
+    const chainContext = await getChainContext()
 
-    const response = await anthropic.messages.create({
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const response  = await anthropic.messages.create({
       model:      'claude-haiku-4-5-20251001',
       max_tokens: 300,
       system:     SYSTEM_PROMPT + chainContext,
       messages:   [{ role: 'user', content: message }],
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : ''
-
+    const text = response.content[0]?.type === 'text' ? response.content[0].text : ''
     return NextResponse.json({ reply: text })
   } catch (err) {
     console.error('Agent error:', err)
