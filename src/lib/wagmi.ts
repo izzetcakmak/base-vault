@@ -11,7 +11,11 @@ import {
 import { base, baseSepolia } from 'wagmi/chains'
 import { createConfig, http } from 'wagmi'
 
-const chain = process.env.NEXT_PUBLIC_NETWORK === 'mainnet' ? base : baseSepolia
+// Default to Base mainnet. Only use testnet when explicitly requested.
+const isTestnet =
+  process.env.NEXT_PUBLIC_NETWORK === 'sepolia' ||
+  process.env.NEXT_PUBLIC_NETWORK === 'baseSepolia'
+const chain = isTestnet ? baseSepolia : base
 
 export const config = getDefaultConfig({
   appName: 'Base Vault',
@@ -34,14 +38,14 @@ export const config = getDefaultConfig({
   ssr: true,
 })
 
-// Contract adresleri
+// Contract adresleri — Base mainnet (env yoksa bu sabitler kullanılır)
 export const CONTRACTS = {
-  VAULT_KEY:    process.env.NEXT_PUBLIC_VAULT_KEY    as `0x${string}`,
-  MASTER_KEY:   process.env.NEXT_PUBLIC_MASTER_KEY   as `0x${string}`,
-  VAULT_LEGEND: process.env.NEXT_PUBLIC_VAULT_LEGEND as `0x${string}`,
+  VAULT_KEY:    (process.env.NEXT_PUBLIC_VAULT_KEY    || '0xAc9F3e3D0F2bb1AACb625C67c6eDFeBf397b4463') as `0x${string}`,
+  MASTER_KEY:   (process.env.NEXT_PUBLIC_MASTER_KEY   || '0x647A6CF58ABaFBF04b14d7E83dDaAC476D8386eF') as `0x${string}`,
+  VAULT_LEGEND: (process.env.NEXT_PUBLIC_VAULT_LEGEND || '0x01CC8dfb1B4eD8518fcb5e9A9049B846fdB5F0e8') as `0x${string}`,
   USDC:         '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as `0x${string}`,
   // Testnet mock USDC (sepolia'da gerçek USDC yok)
-  MOCK_USDC:    process.env.NEXT_PUBLIC_MOCK_USDC    as `0x${string}` | undefined,
+  MOCK_USDC:    (isTestnet ? process.env.NEXT_PUBLIC_MOCK_USDC : undefined) as `0x${string}` | undefined,
 }
 
 // Fiyatlar (USDC — 6 decimal)
