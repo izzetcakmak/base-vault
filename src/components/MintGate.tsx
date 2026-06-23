@@ -21,12 +21,16 @@ const ERC20_ABI = parseAbi([
 
 const VAULT_KEY_ABI = parseAbi([
   'function mint() external',
+  'function mintWithETH() external payable',
+  'function owner() view returns (address)',
   'function hasMinted(address) view returns (bool)',
   'function totalMinted() view returns (uint256)',
 ])
 
 const MASTER_KEY_ABI = parseAbi([
   'function mint() external',
+  'function mintWithETH() external payable',
+  'function owner() view returns (address)',
   'function hasMinted(address) view returns (bool)',
   'function totalMinted() view returns (uint256)',
 ])
@@ -68,6 +72,19 @@ export default function MintGate({ tier, onMinted }: { tier: Tier; onMinted: () 
     functionName: 'totalMinted',
     query: { enabled: !!contractAddress },
   })
+
+  // Kontrat sahibi (owner) — ödeme yapmadan mint edebilir
+  const { data: ownerAddress } = useReadContract({
+    address: contractAddress,
+    abi,
+    functionName: 'owner',
+    query: { enabled: !!contractAddress },
+  })
+
+  const isOwner =
+    !!address &&
+    !!ownerAddress &&
+    address.toLowerCase() === (ownerAddress as string).toLowerCase()
 
   const { data: usdcBalance } = useReadContract({
     address: usdcAddress,
@@ -151,6 +168,25 @@ export default function MintGate({ tier, onMinted }: { tier: Tier; onMinted: () 
     }
   }
 
+  // Owner: USDC ödemeden mintWithETH ile mint (1 wei → treasury = owner, net sıfır)
+  const handleOwnerMint = async () => {
+    try {
+      setStep('minting')
+      setErrMsg('')
+      const hash = await writeContractAsync({
+        address: contractAddress,
+        abi,
+        functionName: 'mintWithETH',
+        value: 1n,
+        dataSuffix: BUILDER_CODE_SUFFIX,
+      })
+      setMintTxHash(hash)
+    } catch (e: any) {
+      setErrMsg(e?.shortMessage || e?.message || 'Mint başarısız')
+      setStep('idle')
+    }
+  }
+
   // ── Hesaplamalar ──────────────────────────────────────────────────────────
   const hasEnoughAllowance = allowance !== undefined && (allowance as bigint) >= price
   const usdcBal = usdcBalance ? Number(formatUnits(usdcBalance as bigint, 6)).toFixed(2) : '—'
@@ -183,6 +219,77 @@ export default function MintGate({ tier, onMinted }: { tier: Tier; onMinted: () 
         >
           CONTINUE →
         </button>
+      </div>
+    )
+  }
+
+  // ── Render: OWNER ücretsiz mint ───────────────────────────────────────────
+  if (isOwner) {
+    return (
+      <div className="border border-amber-700 p-6 space-y-5 max-w-md mx-auto">
+        <div>
+          <div className="crt text-xl tracking-widest text-amber-400">{label.toUpperCase()} // TIER {tier}</div>
+          <p className="text-amber-600 text-xs mt-1">{'> OWNER MODE — no payment required'}</p>
+        </div>
+
+        <div className="border border-amber-900 bg-amber-950/10 p-4 space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-amber-600">STATUS</span>
+            <span className="text-amber-400">CONTRACT OWNER</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-amber-600">COST</span>
+            <span className="text-green-400">FREE (gas only)</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-amber-600">MINTED</span>
+            <span>{minted}</span>
+          </div>
+        </div>
+
+        <p className="text-gray-500 text-xs leading-relaxed">
+          {'> As the contract owner, you mint via mintWithETH with 1 wei. '}
+          {'Funds return to your own treasury — you only pay network gas.'}
+        </p>
+
+        <button
+          onClick={handleOwnerMint}
+          disabled={step === 'minting' || step === 'done' || mintLoading}
+          className={`w-full border px-4 py-3 text-sm transition-all tracking-wider ${
+            step === 'minting' || mintLoading
+              ? 'border-amber-400 text-amber-400 animate-pulse'
+              : step === 'done'
+              ? 'border-green-400 text-green-400'
+              : 'border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black cursor-pointer'
+          }`}
+        >
+          {step === 'done'
+            ? `✓ ${label.toUpperCase()} MINTED!`
+            : step === 'minting' || mintLoading
+            ? '> MINTING... (confirm in wallet)'
+            : `OWNER FREE MINT — ${label.toUpperCase()}`}
+        </button>
+
+        {errMsg && (
+          <div className="text-red-400 text-xs border border-red-900 p-2 break-all">
+            {'> ERROR: '}{errMsg}
+          </div>
+        )}
+
+        {mintTxHash && (
+          <div className="text-xs text-amber-800">
+            Mint TX:{' '}
+            <a href={explorerBase + mintTxHash} target="_blank" rel="noreferrer"
+               className="underline hover:text-amber-600">
+              {mintTxHash.slice(0, 16)}...
+            </a>
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-amber-900 flex justify-between items-center">
+          <span className="text-xs text-amber-800">{address.slice(0,6)}...{address.slice(-4)}</span>
+          <ConnectButton showBalance={false} chainStatus="icon" accountStatus="avatar" />
+        </div>
       </div>
     )
   }
