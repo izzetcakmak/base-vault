@@ -17,9 +17,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient, createWalletClient, http, verifyMessage, getAddress } from 'viem'
+import { createPublicClient, createWalletClient, http, fallback, verifyMessage, getAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
+
+// Çoklu RPC fallback — tek public RPC çökünce/limit yiyince otomatik diğerine geç
+const RPC_TRANSPORT = fallback([
+  'https://base-rpc.publicnode.com',
+  'https://base.meowrpc.com',
+  'https://base-mainnet.public.blastapi.io',
+  'https://base-pokt.nodies.app',
+  'https://mainnet.base.org',
+].map(u => http(u)))
 
 // ── Kontrat adresleri — build-safe (env bozuksa sabite düşer, hata fırlatmaz) ──
 function safeAddr(value: string | undefined, fallback: string): `0x${string}` {
@@ -97,10 +106,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Geçersiz imza' }, { status: 401 })
     }
 
-    // ── 5. On-chain kontroller ────────────────────────────────────
+    // ── 5. Owner mı? (owner test/admin için MasterKey şartını atlar) ──
+    const ownerPrivKey = process.env.OWNER_PRIVATE_KEY
+    const ownerAddr = ownerPrivKey
+      ? privateKeyToAccount(ownerPrivKey as `0x${string}`).address.toLowerCase()
+      : null
+    const isOwner = !!ownerAddr && walletAddr === ownerAddr
+
+    // ── 6. On-chain kontroller ────────────────────────────────────
     const publicClient = createPublicClient({
       chain:     base,
-      transport: http('https://mainnet.base.org'),
+      transport: RPC_TRANSPORT,
     })
 
     const [hasMasterKey, alreadyLegend, alreadyAllowlisted, totalMinted] = await Promise.all([
@@ -110,7 +126,8 @@ export async function POST(req: NextRequest) {
       publicClient.readContract({ address: VAULT_LEGEND_ADDR, abi: VAULT_LEGEND_ABI, functionName: 'totalMinted' }),
     ])
 
-    if (!hasMasterKey) {
+    // Owner değilse MasterKey şartı geçerli
+    if (!hasMasterKey && !isOwner) {
       return NextResponse.json({ error: 'Master Key gerekli (Tier 3 mint)' }, { status: 403 })
     }
     if (alreadyLegend) {
@@ -123,8 +140,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Tüm 333 Vault Legend mint edildi' }, { status: 410 })
     }
 
-    // ── 6. Allowlist'e ekle ───────────────────────────────────────
-    const ownerPrivKey = process.env.OWNER_PRIVATE_KEY
+    // ── 7. Allowlist'e ekle ───────────────────────────────────────
     if (!ownerPrivKey) {
       return NextResponse.json({ error: 'Sunucu yapılandırması eksik' }, { status: 500 })
     }
@@ -133,7 +149,7 @@ export async function POST(req: NextRequest) {
     const walletClient = createWalletClient({
       account,
       chain:     base,
-      transport: http('https://mainnet.base.org'),
+      transport: RPC_TRANSPORT,
     })
 
     const BUILDER_CODE_SUFFIX = '0x62635f366e6868657471320b0080218021802180218021802180218021' as `0x${string}`
