@@ -10,7 +10,8 @@
  *   /api/unlock → paid premium hints (x402 micropayment)
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { verify, useFacilitator } from 'x402/verify'
+import { useFacilitator } from 'x402/verify'
+import { decodePayment } from 'x402/schemes'
 import { BUILDER_CODE, declareBuilderCodeExtension } from '@x402/extensions'
 
 const TREASURY     = '0xD4F1254C803662c46D9c21f80F4F3c15FF57e2c9'
@@ -69,14 +70,13 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // ── Verify payment via Coinbase x402 facilitator ──────────────────────────
+  // ── Verify + settle payment via Coinbase x402 facilitator ─────────────────
   try {
-    const facilitator = useFacilitator({ url: 'https://x402.org/facilitator' })
-    const result      = await verify(
-      { x402Version: 1, payload: paymentHeader } as never,
-      paymentRequirements as never,
-    )
+    // X-PAYMENT base64 → decoded PaymentPayload
+    const decoded = decodePayment(paymentHeader)
+    const { verify, settle } = useFacilitator({ url: 'https://x402.org/facilitator' })
 
+    const result = await verify(decoded as never, paymentRequirements as never)
     if (!result.isValid) {
       return NextResponse.json(
         { error: 'Invalid payment', details: result.invalidReason },
@@ -84,15 +84,17 @@ export async function GET(req: NextRequest) {
       )
     }
 
+    // Settle on-chain (gerçek USDC transferi)
+    const settlement = await settle(decoded as never, paymentRequirements as never)
+
     const hint = PREMIUM_HINTS[tier] || PREMIUM_HINTS['1']
-
-    // Settle payment on-chain (fire and forget)
-    void facilitator.settle(
-      { x402Version: 1, payload: paymentHeader } as never,
-      paymentRequirements as never,
-    )
-
-    return NextResponse.json({ tier, hint, paid: true, payer: result.payer })
+    return NextResponse.json({
+      tier,
+      hint,
+      paid:    true,
+      payer:   result.payer,
+      txHash:  (settlement as { transaction?: string })?.transaction ?? null,
+    })
   } catch (err) {
     console.error('[x402 unlock]', err)
     return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 })

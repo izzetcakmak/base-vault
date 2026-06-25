@@ -10,6 +10,7 @@ const Terminal    = dynamic(() => import('@/components/Terminal'),    { ssr: fal
 const MintGate    = dynamic(() => import('@/components/MintGate'),    { ssr: false })
 const ClaimLegend = dynamic(() => import('@/components/ClaimLegend'), { ssr: false })
 const Leaderboard = dynamic(() => import('@/components/Leaderboard'), { ssr: false })
+const VaultShop   = dynamic(() => import('@/components/VaultShop'),   { ssr: false })
 
 type Stage =
   | 'landing'
@@ -20,6 +21,7 @@ type Stage =
   | 'tier3play'
   | 'claim'
   | 'board'
+  | 'shop'
 
 type Lang  = 'EN' | 'DE' | 'AR' | 'ZH' | 'JA'
 
@@ -42,6 +44,7 @@ const T = {
     connect_note: 'A wallet is required to play and track your progress.',
     claim_link:   'Claim Legend NFT',
     board_link:   'Leaderboard',
+    shop_link:    'Vault Shop',
     video_note:   '🔇 Click the video to unmute',
   },
   DE: {
@@ -61,6 +64,7 @@ const T = {
     connect_note: 'Eine Wallet wird benötigt, um zu spielen und den Fortschritt zu verfolgen.',
     claim_link:   'Legend NFT beanspruchen',
     board_link:   'Bestenliste',
+    shop_link:    'Vault Shop',
     video_note:   '🔇 Klicke auf das Video für Ton',
   },
   AR: {
@@ -80,6 +84,7 @@ const T = {
     connect_note: 'المحفظة مطلوبة للعب وتتبع تقدمك.',
     claim_link:   'استلام Legend NFT',
     board_link:   'لوحة المتصدرين',
+    shop_link:    'متجر الخزنة',
     video_note:   '🔇 اضغط على الفيديو لتشغيل الصوت',
   },
   ZH: {
@@ -99,6 +104,7 @@ const T = {
     connect_note: '需要钱包才能游戏并追踪进度。',
     claim_link:   '领取 Legend NFT',
     board_link:   '排行榜',
+    shop_link:    '保险库商店',
     video_note:   '🔇 点击视频取消静音',
   },
   JA: {
@@ -118,6 +124,7 @@ const T = {
     connect_note: 'プレイと進捗の追跡にはウォレットが必要です。',
     claim_link:   'Legend NFT を請求',
     board_link:   'リーダーボード',
+    shop_link:    'ヴォルトショップ',
     video_note:   '🔇 動画をクリックして音を出す',
   },
 } as const
@@ -277,6 +284,12 @@ export default function Home() {
             >
               {t.board_link}
             </button>
+            <button
+              onClick={() => setStage('shop')}
+              className="text-cyan-700 hover:text-cyan-400 underline"
+            >
+              {t.shop_link}
+            </button>
           </div>
 
         </div>
@@ -364,6 +377,11 @@ export default function Home() {
       {/* ── CLAIM: VaultLegend Allowlist Mint ────────────────────────────── */}
       {stage === 'claim' && (
         <ClaimLegend onBack={() => setStage('landing')} />
+      )}
+
+      {/* ── VAULT SHOP: x402 premium hint satın al ───────────────────────── */}
+      {stage === 'shop' && (
+        <VaultShop lang={lang} onBack={() => setStage('landing')} />
       )}
 
       {/* ── LEADERBOARD ──────────────────────────────────────────────────── */}
