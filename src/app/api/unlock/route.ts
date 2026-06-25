@@ -12,14 +12,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { useFacilitator } from 'x402/verify'
 import { decodePayment } from 'x402/schemes'
-import { BUILDER_CODE, declareBuilderCodeExtension } from '@x402/extensions'
 
 const TREASURY     = '0xD4F1254C803662c46D9c21f80F4F3c15FF57e2c9'
 const USDC_BASE    = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
 const PRICE        = '10000' // 0.01 USDC (6 decimals)
 const RESOURCE     = 'https://vaultgame.online/api/unlock'
-// Base Builder Code — x402 ödemeleri bu koda attribute edilir
-const BUILDER_CODE_VALUE = 'bc_6nhhetq2'
+
+// Base Builder Code — x402 ödemeleri bu koda attribute edilir.
+// @x402/extensions paketi Vercel build'ini bozuyordu; çıktısı statik
+// olduğu için elle gömüyoruz (declareBuilderCodeExtension('bc_6nhhetq2')).
+const BUILDER_CODE      = 'builder-code'
+const BUILDER_CODE_EXT  = { info: { a: 'bc_6nhhetq2' } }
 
 const paymentRequirements = {
   scheme:            'exact' as const,
@@ -37,7 +40,7 @@ const paymentRequirements = {
   },
   // Builder Code attribution (seller / resource server)
   extensions: {
-    [BUILDER_CODE]: declareBuilderCodeExtension(BUILDER_CODE_VALUE),
+    [BUILDER_CODE]: BUILDER_CODE_EXT,
   },
 }
 
