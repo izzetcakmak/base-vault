@@ -77,7 +77,22 @@ export async function GET(req: NextRequest) {
   try {
     // X-PAYMENT base64 → decoded PaymentPayload
     const decoded = decodePayment(paymentHeader)
-    const { verify, settle } = useFacilitator({ url: 'https://x402.org/facilitator' })
+
+    // CDP key'leri varsa → Coinbase CDP facilitator (Base MAINNET settlement).
+    // Yoksa → public facilitator (yalnız testnet/doğrulama için yeterli).
+    let facilitatorConfig: unknown = { url: 'https://x402.org/facilitator' }
+    const cdpId     = process.env.CDP_API_KEY_ID
+    const cdpSecret = process.env.CDP_API_KEY_SECRET
+    if (cdpId && cdpSecret) {
+      try {
+        const { createFacilitatorConfig } = await import('@coinbase/x402')
+        facilitatorConfig = createFacilitatorConfig(cdpId, cdpSecret)
+      } catch (e) {
+        console.error('[x402] CDP facilitator yüklenemedi, public kullanılıyor:', e)
+      }
+    }
+
+    const { verify, settle } = useFacilitator(facilitatorConfig as never)
 
     const result = await verify(decoded as never, paymentRequirements as never)
     if (!result.isValid) {
