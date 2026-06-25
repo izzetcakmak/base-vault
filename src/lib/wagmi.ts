@@ -9,8 +9,8 @@ import {
   trustWallet,
 } from '@rainbow-me/rainbowkit/wallets'
 import { base, baseSepolia } from 'wagmi/chains'
-import { createConfig, http } from 'wagmi'
-import { getAddress } from 'viem'
+import { http } from 'wagmi'
+import { getAddress, fallback } from 'viem'
 
 // Sabit (fallback) adresler — env yoksa/bozuksa bunlar kullanılır.
 // Hepsi doğru EIP-55 checksum'lı.
@@ -36,10 +36,25 @@ const isTestnet =
   process.env.NEXT_PUBLIC_NETWORK === 'baseSepolia'
 const chain = isTestnet ? baseSepolia : base
 
+// Birden fazla RPC — biri çökerse/limit yerse otomatik diğerine geçer (fallback).
+// Tek public RPC (mainnet.base.org) sık sık "no healthy backend" hatası veriyordu.
+const rpcUrls = isTestnet
+  ? ['https://base-sepolia-rpc.publicnode.com', 'https://sepolia.base.org']
+  : [
+      'https://base-rpc.publicnode.com',
+      'https://base.meowrpc.com',
+      'https://base-mainnet.public.blastapi.io',
+      'https://base-pokt.nodies.app',
+      'https://mainnet.base.org',
+    ]
+
 export const config = getDefaultConfig({
   appName: 'Base Vault',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_ID || '2f05ae7f1116030fde2d36508f472bfb',
   chains: [chain],
+  transports: {
+    [chain.id]: fallback(rpcUrls.map(url => http(url))),
+  },
   wallets: [
     {
       groupName: 'Popular',
