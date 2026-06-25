@@ -115,6 +115,12 @@ export async function GET(req: NextRequest) {
     })
   } catch (err) {
     console.error('[x402 unlock]', err)
-    return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 })
+    const raw = err instanceof Error ? err.message : 'Payment verification failed'
+    // Bilinen facilitator hatalarını kullanıcı dostu hale getir
+    const friendly =
+      /self_send/i.test(raw)        ? 'You cannot pay yourself — use a different wallet.' :
+      /insufficient|balance/i.test(raw) ? 'Not enough USDC on Base.' :
+      raw.slice(0, 140)
+    return NextResponse.json({ error: friendly }, { status: 402 })
   }
 }
