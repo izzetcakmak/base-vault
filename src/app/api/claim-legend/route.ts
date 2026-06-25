@@ -21,13 +21,15 @@ import { createPublicClient, createWalletClient, http, verifyMessage, getAddress
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
 
-// ── Kontrat adresleri (env yoksa mainnet sabitleri, checksum normalize) ────────
-const VAULT_LEGEND_ADDR = getAddress(
-  (process.env.NEXT_PUBLIC_VAULT_LEGEND || '0x01CC8dfb1B4eD8518fcb5e9A9049B846fdB5F0e8').toLowerCase(),
-)
-const MASTER_KEY_ADDR = getAddress(
-  (process.env.NEXT_PUBLIC_MASTER_KEY || '0x647A6CF58ABaFBF04b14d7E83dDaAC476D8386eF').toLowerCase(),
-)
+// ── Kontrat adresleri — build-safe (env bozuksa sabite düşer, hata fırlatmaz) ──
+function safeAddr(value: string | undefined, fallback: string): `0x${string}` {
+  if (value) {
+    try { return getAddress(value.trim().toLowerCase()) } catch { /* fall through */ }
+  }
+  return fallback as `0x${string}`
+}
+const VAULT_LEGEND_ADDR = safeAddr(process.env.NEXT_PUBLIC_VAULT_LEGEND, '0x01CC8dfb1B4eD8518fcb5e9A9049B846fdB5F0e8')
+const MASTER_KEY_ADDR   = safeAddr(process.env.NEXT_PUBLIC_MASTER_KEY,   '0x647A6CF58ABaFBF04b14d7E83dDaAC476D8386eF')
 
 // ── ABI ───────────────────────────────────────────────────────────
 const MASTER_KEY_ABI = [
