@@ -125,6 +125,7 @@ function ProgressBar({
 export default function ClaimLegend({ onBack }: { onBack?: () => void }) {
   const { address, isConnected } = useAccount()
   const [mintSuccess, setMintSuccess] = useState(false)
+  const [redirectIn,  setRedirectIn]  = useState(5)
 
   // ── Allowlist claim state ─────────────────────────────────────
   const [claiming, setClaiming]       = useState(false)
@@ -187,6 +188,19 @@ export default function ClaimLegend({ onBack }: { onBack?: () => void }) {
       refetchMinted()
     }
   }, [isConfirmed, refetchAllowlisted, refetchMinted])
+
+  // Mint başarılı → 5 sn geri sayım sonra ana sayfaya dön
+  useEffect(() => {
+    if (!mintSuccess || !onBack) return
+    setRedirectIn(5)
+    const iv = setInterval(() => {
+      setRedirectIn(n => {
+        if (n <= 1) { clearInterval(iv); onBack(); return 0 }
+        return n - 1
+      })
+    }, 1000)
+    return () => clearInterval(iv)
+  }, [mintSuccess, onBack])
 
   // ── Derived state ─────────────────────────────────────────────
   const phase     = (currentPhase as number) || 1
@@ -273,6 +287,22 @@ export default function ClaimLegend({ onBack }: { onBack?: () => void }) {
           >
             OpenSea'de Gör ↗
           </a>
+
+          {onBack && (
+            <div className="mt-6 pt-4 border-t border-gray-800">
+              <button
+                onClick={onBack}
+                className="text-gray-400 hover:text-gray-200 text-sm tracking-widest underline"
+              >
+                ← Ana Sayfaya Dön
+              </button>
+              {mintSuccess && (
+                <div className="text-xs text-gray-600 mt-2">
+                  {redirectIn} saniye içinde otomatik dönülüyor...
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     )
