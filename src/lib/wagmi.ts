@@ -42,7 +42,6 @@ const rpcUrls = isTestnet
   ? ['https://base-sepolia-rpc.publicnode.com', 'https://sepolia.base.org']
   : [
       'https://base-rpc.publicnode.com',
-      'https://base.meowrpc.com',
       'https://base-mainnet.public.blastapi.io',
       'https://base-pokt.nodies.app',
       'https://mainnet.base.org',
@@ -53,7 +52,8 @@ export const config = getDefaultConfig({
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_ID || '2f05ae7f1116030fde2d36508f472bfb',
   chains: [chain],
   transports: {
-    [chain.id]: fallback(rpcUrls.map(url => http(url))),
+    // rank: true → viem en taze/hızlı node'u otomatik seçer (geride kalmış node'ları eler)
+    [chain.id]: fallback(rpcUrls.map(url => http(url)), { rank: true }),
   },
   wallets: [
     {

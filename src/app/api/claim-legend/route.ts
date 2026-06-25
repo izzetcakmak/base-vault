@@ -24,7 +24,6 @@ import { base } from 'viem/chains'
 // Çoklu RPC fallback — tek public RPC çökünce/limit yiyince otomatik diğerine geç
 const RPC_TRANSPORT = fallback([
   'https://base-rpc.publicnode.com',
-  'https://base.meowrpc.com',
   'https://base-mainnet.public.blastapi.io',
   'https://base-pokt.nodies.app',
   'https://mainnet.base.org',
