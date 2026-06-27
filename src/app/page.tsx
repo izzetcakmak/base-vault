@@ -45,6 +45,7 @@ const T = {
     claim_link:   'Claim Legend NFT',
     board_link:   'Leaderboard',
     shop_link:    'Vault Shop',
+    docs_link:    'Docs',
     video_note:   '🔇 Click the video to unmute',
   },
   DE: {
@@ -65,6 +66,7 @@ const T = {
     claim_link:   'Legend NFT beanspruchen',
     board_link:   'Bestenliste',
     shop_link:    'Vault Shop',
+    docs_link:    'Doku',
     video_note:   '🔇 Klicke auf das Video für Ton',
   },
   AR: {
@@ -85,6 +87,7 @@ const T = {
     claim_link:   'استلام Legend NFT',
     board_link:   'لوحة المتصدرين',
     shop_link:    'متجر الخزنة',
+    docs_link:    'الوثائق',
     video_note:   '🔇 اضغط على الفيديو لتشغيل الصوت',
   },
   ZH: {
@@ -105,6 +108,7 @@ const T = {
     claim_link:   '领取 Legend NFT',
     board_link:   '排行榜',
     shop_link:    '保险库商店',
+    docs_link:    '文档',
     video_note:   '🔇 点击视频取消静音',
   },
   JA: {
@@ -125,6 +129,7 @@ const T = {
     claim_link:   'Legend NFT を請求',
     board_link:   'リーダーボード',
     shop_link:    'ヴォルトショップ',
+    docs_link:    'ドキュメント',
     video_note:   '🔇 動画をクリックして音を出す',
   },
 } as const
@@ -290,6 +295,12 @@ export default function Home() {
             >
               {t.shop_link}
             </button>
+            <a
+              href="/docs"
+              className="text-green-800 hover:text-green-600 underline"
+            >
+              {t.docs_link}
+            </a>
           </div>
 
         </div>
