@@ -354,6 +354,7 @@ export default function Terminal({
           prompt:   c.prompt,
           wrongCount,
           lastAttempt: input.trim() || undefined,
+          lang,
         }),
       })
       const data = await res.json() as { hint: string; guardianActive?: boolean }
